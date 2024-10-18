@@ -15,10 +15,41 @@ class Lexer():
         return f"Token({self.type}, {self.value})"
     
 
+    def checkNumber(input):
+        length = len(input)    
+        pattern = "\d{"+str(length)+"}"
+        matching = re.match(pattern,input)
+                
+        return matching
+
     def checkOperator(input):
-        matching = re.match()
+        pattern = "^[\+\*\-=\/]$"
+        matching = re.match(pattern,input)
+
+        return matching
+
+
+    def checkType(input):
+        matching = None
+        match input:
+            case "num":#numeric
+                return input
+            case "str":#string
+                return input
+            case "bool":#boolean
+                return input
+                
+
+        return matching
+
 
     def tokenizeString(input):
 
         pass
-        
+    
+
+    test = checkType("num")
+    if test == None:
+        print("No Match")
+    else:
+        print(test)
