@@ -13,7 +13,12 @@ TOKENS = [
     ('ASSIGN',     r'='),                  # Assignment operator
     ('END',        r';'),                  # Statement terminator
     ('ID',         r'[A-Za-z_]\w*'),       # Identifiers (variables/functions)
-    ('OP',         r'[+\-*/%]'),           # Arithmetic operators
+    #('OP',        r'[+\-*/%]'),           # Arithmetic operators
+    ('REMAINDER',  r'[%]'),           # Arithmetic operators
+    ('MULTIPLY',   r'[*]'),           # Arithmetic operators
+    ('DIVIDE',     r'[/]'),           # Arithmetic operators
+    ('MINUS',      r'[-]'),           # Arithmetic operators
+    ('ADD',       r'[+]'),           # Arithmetic operators
     ('NEWLINE',    r'\n'),                 # Line breaks
     ('SKIP',       r'[ \t]+'),             # Skip over spaces and tabs
     ('MISMATCH',   r'.'),                  # Any other character
@@ -64,10 +69,18 @@ def tokenizeCode(code):
                 token_list.append(Token('IDENTIFIER', value, line, column))
             elif type == 'ASSIGN':
                 token_list.append(Token('ASSIGN', value, line, column))
-            elif type == 'OP':
-                token_list.append(Token('OPERATOR', value, line, column))
-            elif type == 'END':
-                token_list.append(Token('END', value, line, column))
+            #elif type == 'OP':
+            #   token_list.append(Token('OPERATOR', value, line, column))
+            elif type == 'REMAINDER':
+                token_list.append(Token('REMAINDER', value, line, column))
+            elif type == 'MULTIPLY':
+                token_list.append(Token('MULTIPLY', value, line, column))
+            elif type == 'DIVIDE':
+                token_list.append(Token('DIVIDE', value, line, column))
+            elif type == 'MINUS':
+                token_list.append(Token('MINUS', value, line, column))
+            elif type == 'ADD':
+                token_list.append(Token('ADD', value, line, column))
             elif type == 'NEWLINE':
                 line += 1
                 start = match.end()
