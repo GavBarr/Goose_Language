@@ -36,13 +36,13 @@ class Parser:
         #Looking for an operator of plus or minus of two TERMS
         print(f"Expression Current Token {self.current_token}\n")
         node = self.parseTerm() # this is finding the first term of the expression, to basically initialize the tree etc
-        
-        while self.current_token.type in ('MINUS','ADD'):
+        print(f'2nd Expression Current Token {self.current_token}/n')
+        while self.current_token and self.current_token.type in ('MINUS','ADD'):# we need to check for self.current_token, to see if there is a valid token or not
             token = self.current_token
             operator_node = token
             self.eat(operator_node.type)
             print(f"Before Expression Node Found Token {self.current_token}")
-            node = ('operator', operator_node.value, node, "test node") #the last two tuple fields, are the left and right nodes connected to the node
+            node = ('operator', operator_node.value, node, self.parseTerm()) #the last two tuple fields, are the left and right nodes connected to the node
             print(f"After Expression Node Found Token {self.current_token}\n")
             #                                        left  right
             #print(node[1])
@@ -54,9 +54,10 @@ class Parser:
     def parseTerm(self):
         print(f"Term Current Token {self.current_token}\n")
         node = self.parseFactor()
+        print(f"2nd Term Current Token {self.current_token}")
        # print(self.current_token.type)
         
-        while self.current_token.type in ('MULTIPLY','DIVIDE'):
+        while self.current_token and self.current_token.type in ('MULTIPLY','DIVIDE'):
             token = self.current_token
             operator_node = token
             self.eat(operator_node.type)
@@ -67,10 +68,10 @@ class Parser:
     def parseFactor(self):
         print(f"Factor Current Token {self.current_token}\n")
         token = self.current_token
-        if self.current_token.type == "INTEGER_LITERAL":
+        if self.current_token and self.current_token.type == "INTEGER_LITERAL":
             self.eat("INTEGER_LITERAL")
 
-            return ("Number", token.value) #return the value so then it can be stored into the tree/node correctly
+            return ("INTEGER_LITERAL", token.value) #return the value so then it can be stored into the tree/node correctly
         else:
             return "Syntax Error"
 
