@@ -14,7 +14,8 @@
 # I first need to checkExpression -> checkTerm -> checkFactor, because the checking needs to stay in the order of precedence
 # Nodes/Creating the Tree. Check for the expression, and then establish the root of the tree.
 
-
+#Conditional Statements/Expressions
+#   if (<condition>) > <trueblock> <elf (<condition>) > <falseblock> < el > <falseblock> < 
 
 class Parser:
     
