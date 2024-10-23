@@ -18,15 +18,18 @@ TOKENS = [
     ('MULTIPLY',   r'[*]'),           # Arithmetic operators
     ('DIVIDE',     r'[/]'),           # Arithmetic operators
     ('MINUS',      r'[-]'),           # Arithmetic operators
-    ('ADD',       r'[+]'),           # Arithmetic operators
+    ('ADD',        r'[+]'),           # Arithmetic operators
+    ('LPAREN',     r'\('),           # Left parenthesis
+    ('RPAREN',     r'\)'),           # Right parenthesis
+    ('BLOCKEND',   r'}'),           # Right parenthesis
+    ('BLOCKSTART', r'{'),           # Right parenthesis
     ('NEWLINE',    r'\n'),                 # Line breaks
     ('SKIP',       r'[ \t]+'),             # Skip over spaces and tabs
     ('MISMATCH',   r'.'),                  # Any other character
-    ('LPARENTH',   r'[(]'),                  # Any other character
-    ('RPARENTH',   r'[)]'),                  # Any other character
+    
 ]
 
-KEYWORDS = {'if', 'elf', 'el', 'while', 'for', 'step', 'break', 'done', 'exit', 'continue', '{', '}'}
+KEYWORDS = {'if', 'elf', 'el', 'while', 'for', 'step', 'break', 'done', 'exit', 'continue'}
 
 class Token:
 
@@ -83,10 +86,14 @@ def tokenizeCode(code):
                 token_list.append(Token('MINUS', value, line, column))
             elif type == 'ADD':
                 token_list.append(Token('ADD', value, line, column))
-            elif type == 'LPARENTH':
-                token_list.append(Token('LPARENTH', value, line, column))
-            elif type == 'RPARENTH':
-                token_list.append(Token('RPARENTH', value, line, column))
+            elif type == 'LPAREN':
+                token_list.append(Token('LPAREN', value, line, column))
+            elif type == 'RPAREN':
+                token_list.append(Token('RPAREN', value, line, column))
+            elif type == 'BLOCKEND':
+                token_list.append(Token('BLOCKEND', value, line, column))
+            elif type == 'BLOCKSTART':
+                token_list.append(Token('BLOCKSTART', value, line, column))
             elif type == 'NEWLINE':
                 line += 1
                 start = match.end()

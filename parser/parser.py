@@ -15,7 +15,7 @@
 # Nodes/Creating the Tree. Check for the expression, and then establish the root of the tree.
 
 #Conditional Statements/Expressions
-#   if (<condition>) > <trueblock> <elf (<condition>) > <falseblock> < el > <falseblock> < 
+#   if (<condition>){ <trueblock> } elf (<condition>){ <falseblock> } el{ <falseblock> }
 
 class Parser:
     
@@ -29,7 +29,71 @@ class Parser:
         if self.current_token and self.current_token.type == token_type:
             self.current_token = next(self.token_list, None)
 
+
+
+
+    def parseFunctionCall(self):
+        name = self.current_token
+        self.consumeToken(self.current_token.type) # we want to then move past the "function name" and determine if there are () afterwards, with or without arguments. this defines a function or a variable
+
+        if self.current_token and self.current_token.type == 'LPAREN':
+            self.consumeToken(self.current_token.type)
+            #define the arguments for the function
+            args = parseFunctionArguments()
+            if self.current_token and self.current_token.type == 'RPAREN':
+                    self.consumeToken(self.current_token.type)
+
+                    node = ('Function', name.value, None, args) #it is only necessary to have on child node for a function node, because only the arguments are assocaited to the root node of the function name
+                    return node
+
+    def parseFunctionArguments(self):
+        pass
+
+    def parseIfCondition(self):
+        #if tis isn't the start of a conditional block, then bail
+        if self.current_token.type != ('KEYWORD'):
+            return None
+        
+        #look though the token list then for the if/while/for root node
+        while self.current_token and self.current_token.type in ('KEYWORD'): #using keyword this will group all fo the keywords, could be problematic becuase of step, continue etc. 
+            #if self.current_token.value == "if":
+
+            operator = self.current_token
+            self.consumeToken(operator.type)
+
+            left_node = self.parseAssignmentExpression()
+            node = ('Conditional', operator.value, left_node, self.parseIfBlockExpression()) #the left child will be the TRUE/FALSE statement, and then the right child will be corresponding expression IF TRUE
+            
+        return node
     
+   
+    
+    def parseAssignmentExpression(self):
+        #print('inside of assignemnt expression def')
+        node = self.parseTerm()
+        
+
+        while self.current_token and self.current_token.type in ('ASSIGN'):
+
+            operator = self.current_token
+            self.consumeToken(operator.type)
+            node = ('AssignOperator', operator.value, node, self.parseTerm())
+
+        return node
+    
+
+
+    def parseIfBlockExpression(self):
+        #I want to identify "{" so then I can consume the token, and start the expression correctly
+        if self.current_token and self.current_token.type in ('BLOCKSTART'):
+                self.consumeToken(self.current_token.type) #consume and move to the next token in the list, so then we can evalutate the expression correctly
+        else:
+            raise SyntaxError(f"Syntax Issue on line {self.current_token.line}") #simple syntax error
+            
+        node = self.parseExpression()
+        
+
+        return node
 
     #looking for any + or - operators, to set as the root of the tree
     def parseExpression(self):
@@ -48,7 +112,8 @@ class Parser:
             #assign the node as a tuple, with the type, value, left child and right child
             node = ('Operator', operator.value, node, self.parseTerm())#node inside of the tuple, is the node from looking at self.parseTerm()
             #                                       left  right
-        print(f'Node {node}')
+            
+       
         return node
 
     #very similar to the parseExpression, but now we are looking at and comparing for the next node as a Factor rather than a Term
@@ -68,9 +133,16 @@ class Parser:
     
     def parseFactor(self):
         
+
+       # print(f'factor {self.current_token.type}')
         if self.current_token and self.current_token.type == "INTEGER_LITERAL":
-            token = ("NUMBER", self.current_token.value)#we store the type and the value as a token and then proceed to the next token
+            token = ("Number", self.current_token.value)#we store the type and the value as a token and then proceed to the next token
             self.consumeToken(self.current_token.type)
+            return token
+        if self.current_token and self.current_token.type == "IDENTIFIER":
+            token = ('Variable', self.current_token.value)
+            self.consumeToken(self.current_token.type)
+            #print(f'token')
             return token
         #else if check for parantheses
         #else:
