@@ -106,11 +106,15 @@ class Evaluator:
     #evaluate IF, ELSIF, ELSE, WHILE, FOR etc.
     def evalConditional(self,node):        
         op = node[1] #check for the conditional value, if, else, for etc.
+        print(f'IMPORTANT NODE: {node}')
         if op=='if':
             #print(f'{node[2][0]}')
             left = self.evaluate(node[2]) #this will be the expression to determine if it is true or false            
             if left == True:
                 right = self.evaluate(node[3]) #this is the block of code that will be executed if the statement is true
+            else:
+                right = self.evaluate(node[4]) #I need to look at the third child node, which will be either None, or the Else/Elf block that needs to be executed
+
             
     #evalute if the the arguments/condition are true, return true or false
     def evalEqualsOperator(self,node):  

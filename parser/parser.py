@@ -39,10 +39,10 @@ class Parser:
 
         #print(f'{self.current_token.type}')
         # After parsing an assignment, we expect a semicolon to terminate the statement
-        if self.current_token and self.current_token.type in ('END','BLOCKEND','LPAREN','RPAREN'): #TODO fix the logic to handle assignments, im thinking it will have to be nested within the above IF condition
-            self.consumeToken(self.current_token.type)
-        else:
-            raise SyntaxError("Expected ';' at the end of the statement.")
+        #if self.current_token and self.current_token.type in ('END','BLOCKEND','LPAREN','RPAREN'): #TODO fix the logic to handle assignments, im thinking it will have to be nested within the above IF condition
+        self.consumeToken(self.current_token.type)
+        #else:
+            #raise SyntaxError("Expected ';' at the end of the statement.")
         
         return node
 
@@ -76,15 +76,19 @@ class Parser:
             
             if self.current_token and self.current_token.type == 'RPAREN':
                     self.consumeToken(self.current_token.type)
-
-                    node = ('Function', name.value, None, args) #it is only necessary to have on child node for a function node, because only the arguments are assocaited to the root node of the function name
-                    return node
+                    if self.current_token.type=='END':
+                        node = ('Function', name.value, None, args) #it is only necessary to have on child node for a function node, because only the arguments are assocaited to the root node of the function name
+                        return node
+                    else:
+                        raise SyntaxError(f"';' missing")
             else:
                 raise SyntaxError(f"'{name.value}' is not a valid function")
         
 
     def parseFunctionArguments(self):
         node = self.parseTerm()
+
+        print(f'Func Node: {node}')
         return node
 
     def parseIfCondition(self):
@@ -94,21 +98,35 @@ class Parser:
         
         #look though the token list then for the if/while/for root node
         while self.current_token and self.current_token.type in ('KEYWORD'): #using keyword this will group all fo the keywords, could be problematic becuase of step, continue etc. 
-            #if self.current_token.value == "if":
-
-            operator = self.current_token
-            self.consumeToken(operator.type)
-            #print(f'{self.current_token.type}')
-            if self.current_token and self.current_token.type in ('LPAREN'):
-                self.consumeToken(self.current_token.type)
-                left_node = self.parseEqualsExpression()
-                node = ('Conditional', operator.value, left_node, self.parseIfBlockExpression()) #the left child will be the TRUE/FALSE statement, and then the right child will be corresponding expression IF TRUE
-            else:
-                raise SyntaxError(f"Syntax Error '(' Missing")
-                
+            if self.current_token.value == "if":
+                operator = self.current_token
+                self.consumeToken(operator.type)
+                #print(f'{self.current_token.type}')
+                if self.current_token and self.current_token.type in ('LPAREN'):
+                    self.consumeToken(self.current_token.type)
+                    left_node = self.parseEqualsExpression()#                                        this far right child node will be the else/elf node
+                    middle_node = self.parseIfBlockExpression()                   
+                    node = ('Conditional', operator.value, left_node, middle_node, self.parseElseCondition()) #the left child will be the TRUE/FALSE statement, and then the right child will be corresponding expression IF TRUE
+                else:
+                    raise SyntaxError(f"Syntax Error '(' Missing")
+            
             
             
         return node
+    
+
+    def parseElseCondition(self):
+        self.consumeToken(self.current_token.type)
+        self.consumeToken(self.current_token.type)     
+        print(f'Else Branch: {self.current_token}')
+        if self.current_token and self.current_token.type=='KEYWORD':
+            
+            if self.current_token.value=='el':#TODO add logic as well for the elf value
+                self.consumeToken(self.current_token.type)
+                node = self.parseElseBlockExpression() #this should handle any logic for conditional blocks, for specifically { expression }
+                print(f'else node: {node}')
+                return node
+        return None
     
     #this is exclusive for comparing for conditionals, not assigning
     def parseEqualsExpression(self):
@@ -138,7 +156,21 @@ class Parser:
 
         return node
     
+    def parseElseBlockExpression(self):
+        #I want to identify "{" so then I can consume the token, and start the expression correctly
+        
 
+        
+        #print(f'{self.current_token.type}')
+        if self.current_token and self.current_token.type in ('BLOCKSTART'):
+                self.consumeToken(self.current_token.type) #consume and move to the next token in the list, so then we can evalutate the expression correctly
+        else:
+            raise SyntaxError(f"Syntax Issue on line {self.current_token.line}") #simple syntax error
+            
+        node = self.parseExpression()
+        
+
+        return node
 
     def parseIfBlockExpression(self):
         #I want to identify "{" so then I can consume the token, and start the expression correctly

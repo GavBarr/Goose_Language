@@ -4,8 +4,16 @@ from interpreter.interpreter import Evaluator
 
 code = '''
         
+
+            x=1;
+            y=2;
            
-            display('test');
+            if(x==1){
+                display(x);
+            }el{
+                
+                display(y);
+            }
            
     
         '''
