@@ -24,6 +24,39 @@ class Parser:
         self.current_token = next(self.token_list, None)
 
 
+
+    def parseStatement(self): #single
+    
+        # Check for assignment expression
+        node = self.parseExpression()
+        
+        if self.current_token and self.current_token.type == 'ASSIGN':
+            operator = self.current_token
+            self.consumeToken(operator.type)  # Consume the assignment operator
+            # Recursively parse the right-hand side expression
+            rhs = self.parseExpression()  # Handle the expression on the right side of the assignment
+            node = ('AssignOperator', operator.value, node, rhs)
+
+        #print(f'{self.current_token.type}')
+        # After parsing an assignment, we expect a semicolon to terminate the statement
+        if self.current_token and self.current_token.type in ('END','BLOCKEND','LPAREN','RPAREN'): #TODO fix the logic to handle assignments, im thinking it will have to be nested within the above IF condition
+            self.consumeToken(self.current_token.type)
+        else:
+            raise SyntaxError("Expected ';' at the end of the statement.")
+        
+        return node
+
+    def parseStatements(self): #multiple
+        statements = []
+        
+        while self.current_token:
+            statement = self.parseStatement()
+            statements.append(statement)
+            
+        return ('Statements', statements)
+
+        
+
     #I want to grab the current type of the token being processed and then go to the next token of from the token list
     def consumeToken(self, token_type):
         if self.current_token and self.current_token.type == token_type:
@@ -39,15 +72,20 @@ class Parser:
         if self.current_token and self.current_token.type == 'LPAREN':
             self.consumeToken(self.current_token.type)
             #define the arguments for the function
-            args = parseFunctionArguments()
+            args = self.parseFunctionArguments()
+            
             if self.current_token and self.current_token.type == 'RPAREN':
                     self.consumeToken(self.current_token.type)
 
                     node = ('Function', name.value, None, args) #it is only necessary to have on child node for a function node, because only the arguments are assocaited to the root node of the function name
                     return node
+            else:
+                raise SyntaxError(f"'{name.value}' is not a valid function")
+        
 
     def parseFunctionArguments(self):
-        pass
+        node = self.parseTerm()
+        return node
 
     def parseIfCondition(self):
         #if tis isn't the start of a conditional block, then bail
@@ -60,16 +98,35 @@ class Parser:
 
             operator = self.current_token
             self.consumeToken(operator.type)
-
-            left_node = self.parseAssignmentExpression()
-            node = ('Conditional', operator.value, left_node, self.parseIfBlockExpression()) #the left child will be the TRUE/FALSE statement, and then the right child will be corresponding expression IF TRUE
+            #print(f'{self.current_token.type}')
+            if self.current_token and self.current_token.type in ('LPAREN'):
+                self.consumeToken(self.current_token.type)
+                left_node = self.parseEqualsExpression()
+                node = ('Conditional', operator.value, left_node, self.parseIfBlockExpression()) #the left child will be the TRUE/FALSE statement, and then the right child will be corresponding expression IF TRUE
+            else:
+                raise SyntaxError(f"Syntax Error '(' Missing")
+                
+            
             
         return node
     
+    #this is exclusive for comparing for conditionals, not assigning
+    def parseEqualsExpression(self):
+        node = self.parseTerm()
+        
+
+        while self.current_token and self.current_token.type in ('EQUALS'):
+
+            operator = self.current_token
+            self.consumeToken(operator.type)
+            node = ('EqualsOperator', operator.value, node, self.parseTerm())
+
+        return node
+
    
     
     def parseAssignmentExpression(self):
-        #print('inside of assignemnt expression def')
+        
         node = self.parseTerm()
         
 
@@ -85,6 +142,14 @@ class Parser:
 
     def parseIfBlockExpression(self):
         #I want to identify "{" so then I can consume the token, and start the expression correctly
+        
+
+        if self.current_token and self.current_token.type in ('RPAREN'):
+                self.consumeToken(self.current_token.type) #consume and move to the next token in the list, so then we can evalutate the expression correctly
+        else:
+            raise SyntaxError(f"Syntax Issue on line {self.current_token.line}") #simple syntax error
+        
+        #print(f'{self.current_token.type}')
         if self.current_token and self.current_token.type in ('BLOCKSTART'):
                 self.consumeToken(self.current_token.type) #consume and move to the next token in the list, so then we can evalutate the expression correctly
         else:
@@ -99,16 +164,37 @@ class Parser:
     def parseExpression(self):
         #initialize by looking for the potential left child node, which would could be a Term or Factor, needs to look at 
         #parseTerm() first becuase of the syntax heirarchy
-        node = self.parseTerm()
+        
+        if self.current_token.type=='KEYWORD':
+            node = self.parseIfCondition()
+        elif self.current_token.type=='IDENTIFIER' and self.current_token.value=='display': #this should eventually have a list of all of the language functions, this will be defined at the beginning/ global list
+            node = self.parseFunctionCall()
+        else:
+            #print(f'parseTerm(){self.current_token.type}')
+            node = self.parseTerm()
+        
+       
+        # Check for assignment operator first
+        if self.current_token and self.current_token.type == 'ASSIGN':
+            operator = self.current_token
+            self.consumeToken(operator.type)  # Consume the assignment operator
+            # Parse the right-hand side expression
+            
+            
+            # Return an AST node for assignment
+            node = ('AssignOperator', operator.value, node, self.parseExpression()) #recursively go back to the parseExpression and now grab the + or - as the right child root
+
+
+        
         #while there is a valid token and a valid type of + or - we will evaluate the token and assign a node
-        while self.current_token and self.current_token.type in ('MINUS','ADD'):
+        while self.current_token and self.current_token.type in ('MINUS','ADD' ):
             
             #set the operator node to the current node, becuse the type matches + or -
             operator = self.current_token
 
             #we want to then consume the token and move to the next in the list
             self.consumeToken(operator.type)
-
+            #print(f'{node}')
             #assign the node as a tuple, with the type, value, left child and right child
             node = ('Operator', operator.value, node, self.parseTerm())#node inside of the tuple, is the node from looking at self.parseTerm()
             #                                       left  right
@@ -141,6 +227,11 @@ class Parser:
             return token
         if self.current_token and self.current_token.type == "IDENTIFIER":
             token = ('Variable', self.current_token.value)
+            self.consumeToken(self.current_token.type)
+            #print(f'token')
+            return token
+        if self.current_token and self.current_token.type == "STRING_LITERAL":
+            token = ('String', self.current_token.value)
             self.consumeToken(self.current_token.type)
             #print(f'token')
             return token

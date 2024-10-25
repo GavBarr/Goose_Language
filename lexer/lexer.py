@@ -10,7 +10,8 @@ TOKENS = [
     ('INTEGER',    r'\b\d+\b'),            # Integer number
     ('BOOLEAN',    r'\b(T|F)\b'),          # Boolean literals
     ('STRING',     r'\".*?\"|\'.*?\''),    # String literals (single or double quotes)
-    ('ASSIGN',     r'='),                  # Assignment operator
+    ('EQUALS',     r'=='),                  # Assignment operator
+    ('ASSIGN',     r'='),                  # Assignment operator   
     ('END',        r';'),                  # Statement terminator
     ('ID',         r'[A-Za-z_]\w*'),       # Identifiers (variables/functions)
     #('OP',        r'[+\-*/%]'),           # Arithmetic operators
@@ -74,6 +75,8 @@ def tokenizeCode(code):
                 token_list.append(Token('IDENTIFIER', value, line, column))
             elif type == 'ASSIGN':
                 token_list.append(Token('ASSIGN', value, line, column))
+            elif type == 'EQUALS':#comparator operator for conditionals
+                token_list.append(Token('EQUALS', value, line, column))
             #elif type == 'OP':
             #   token_list.append(Token('OPERATOR', value, line, column))
             elif type == 'REMAINDER':
@@ -94,6 +97,8 @@ def tokenizeCode(code):
                 token_list.append(Token('BLOCKEND', value, line, column))
             elif type == 'BLOCKSTART':
                 token_list.append(Token('BLOCKSTART', value, line, column))
+            elif type == 'END':
+                token_list.append(Token('END', value, line, column))
             elif type == 'NEWLINE':
                 line += 1
                 start = match.end()
