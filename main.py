@@ -1,38 +1,81 @@
+#Author: Gavin Barrett
 from lexer.lexer import tokenizeCode
 from parser.parser import Parser
 from interpreter.interpreter import Evaluator
+import sys
+
 
 code = '''
-        
-
-            x=1;
-            y=2;
-           
-            if(x==1){
-                display(x);
-            }el{
+            
+                /*this is my langauge I am engineering
+                x=2;
+                y=22;
+                z=3;
+                if(x==2){
+                    display("first");
+                    
+                }
+                elf(x==0){
+                    display("second");
+                }
+                elf(x==4){
+                    display("third");
+                }el{
+                    display("fourth");
+                }
                 
-                display(y);
-            }
-           
-    
-        '''
+                first="gavin";
+                display(first);
+
+                last="barrett";
+                display(last);
+
+                display("FirstName: "+first+" LastName: "+last);
 
 
 
-def process_node(node, depth=0):
-    # Base case: If node is not a tuple, simply print it with indentation
-    if not isinstance(node, tuple):
-        print("  " * depth + str(node))
-        return
-    
-    # Recursive case: Process each element in the tuple
-    for element in node:
-        process_node(element, depth + 1)
+
+                
+            
         
+            '''
+
+
+
+#def main():
+
+   # if len(sys.argv) < 2:
+        #print("Please provide a .mylang file to execute.")
+        #sys.exit(1)
+
+    # Load the .mylang file
+    #filename = sys.argv[1]
+    #print(f'{filename}')
+    #with open(filename, 'r') as f:
+        #code = f.read()
+
+        
+    #tokens = tokenizeCode(code)
+    #for token in tokens:
+        #print(token)
+
+    #print(type(tokens))
+    #token_list = iter(tokens) #make the token_list an iterator so then I can use the next function within the Parser object
+    #print(type(tokens))
+    #p = Parser(token_list)
+    #result = p.parseStatements()
+    #print(result)
+    #separated_statement_node = result[1] #I want to get the value of the statements tuple, the tuple contains the statement AST tree essentially
+    #print (separated_statement_node)
+    #eval = Evaluator()
+    #eval.evaluate(separated_statement_node)
+    #print(eval)
+
+
+#main()
 tokens = tokenizeCode(code)
-for token in tokens:
-    print(token)
+#for token in tokens:
+    #print(token)
 
 #print(type(tokens))
 token_list = iter(tokens) #make the token_list an iterator so then I can use the next function within the Parser object

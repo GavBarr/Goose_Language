@@ -17,6 +17,8 @@
 #Conditional Statements/Expressions
 #   if (<condition>){ <trueblock> } elf (<condition>){ <falseblock> } el{ <falseblock> }
 
+#Comments /* for individual lines
+
 class Parser:
     
     def __init__(self, token_list):
@@ -28,6 +30,7 @@ class Parser:
     def parseStatement(self): #single
     
         # Check for assignment expression
+        
         node = self.parseExpression()
         
         if self.current_token and self.current_token.type == 'ASSIGN':
@@ -40,7 +43,8 @@ class Parser:
         #print(f'{self.current_token.type}')
         # After parsing an assignment, we expect a semicolon to terminate the statement
         #if self.current_token and self.current_token.type in ('END','BLOCKEND','LPAREN','RPAREN'): #TODO fix the logic to handle assignments, im thinking it will have to be nested within the above IF condition
-        self.consumeToken(self.current_token.type)
+        if self.current_token:
+            self.consumeToken(self.current_token.type)
         #else:
             #raise SyntaxError("Expected ';' at the end of the statement.")
         
@@ -48,12 +52,15 @@ class Parser:
 
     def parseStatements(self): #multiple
         statements = []
-        
-        while self.current_token:
-            statement = self.parseStatement()
-            statements.append(statement)
-            
-        return ('Statements', statements)
+
+        try:
+            while self.current_token:
+                statement = self.parseStatement()
+                statements.append(statement)
+                
+            return ('Statements', statements)
+        except:
+            raise SyntaxError(f'Error on Line: {self.current_token.line}')
 
         
 
@@ -66,6 +73,7 @@ class Parser:
 
 
     def parseFunctionCall(self):
+        self.parseLineComments()
         name = self.current_token
         self.consumeToken(self.current_token.type) # we want to then move past the "function name" and determine if there are () afterwards, with or without arguments. this defines a function or a variable
 
@@ -86,12 +94,14 @@ class Parser:
         
 
     def parseFunctionArguments(self):
-        node = self.parseTerm()
+        self.parseLineComments()
+        node = self.parseExpression()
 
-        print(f'Func Node: {node}')
+        
         return node
 
     def parseIfCondition(self):
+        self.parseLineComments()
         #if tis isn't the start of a conditional block, then bail
         if self.current_token.type != ('KEYWORD'):
             return None
@@ -105,34 +115,85 @@ class Parser:
                 if self.current_token and self.current_token.type in ('LPAREN'):
                     self.consumeToken(self.current_token.type)
                     left_node = self.parseEqualsExpression()#                                        this far right child node will be the else/elf node
-                    middle_node = self.parseIfBlockExpression()                   
-                    node = ('Conditional', operator.value, left_node, middle_node, self.parseElseCondition()) #the left child will be the TRUE/FALSE statement, and then the right child will be corresponding expression IF TRUE
+                    middle_node = self.parseElfBlockExpression()                   
+                    node = ('Conditional', operator.value, left_node, middle_node, self.parseElfCondition()) #the left child will be the TRUE/FALSE statement, and then the right child will be corresponding expression IF TRUE
                 else:
                     raise SyntaxError(f"Syntax Error '(' Missing")
             
             
             
+            
         return node
+    
+    def parseElfCondition(self):
+        self.parseLineComments()
+       # print(f'{self.current_token.type}')
+
+        if self.current_token.type != ('KEYWORD'): # this is to catch the infinite loop that happens if there are more than one elf conditions
+            self.consumeToken(self.current_token.type) #consume ;
+            #print(f'{self.current_token.type}')
+            self.consumeToken(self.current_token.type) #consume }
+            #print(f'{self.current_token.type}')
+             
+        if self.current_token and self.current_token.type != ('KEYWORD'):           
+            return None
+        if self.current_token.value == 'el':
+            return self.parseElseCondition()
+        
+        
+        while self.current_token and self.current_token.type in ('KEYWORD'):
+            if self.current_token.value == 'elf':                
+                operator = self.current_token
+                self.consumeToken(operator.type)
+                if self.current_token and self.current_token.type in ('LPAREN'):
+                    self.consumeToken(self.current_token.type)
+                    left_node = self.parseEqualsExpression()#                                        this far right child node will be the else/elf node
+                    middle_node = self.parseIfBlockExpression()
+                    self.consumeToken(self.current_token.type) #we consume two more tokens to address the while infinite loop issue
+                    self.consumeToken(self.current_token.type)                   
+                    node = ('Conditional', operator.value, left_node, middle_node, self.parseElseCondition()) #the left child will be the TRUE/FALSE statement, and then the right child will be corresponding expression IF TRUE
+                else:
+                    raise SyntaxError(f"Syntax Error '(' Missing")
+                
+
+        return node
+        
     
 
     def parseElseCondition(self):
-        self.consumeToken(self.current_token.type)
-        self.consumeToken(self.current_token.type)     
-        print(f'Else Branch: {self.current_token}')
+
+        
+        self.parseLineComments()
+        #not sure why I was consuming two tokens before entering this function, but I did find some issues when parsing the AST tree. The node that is created isn't correct 12/7/24
+        #i figured out why there are two consumptions, becuase of an infinite loop issue in a while loop
+
+
+        #self.consumeToken(self.current_token.type)       
+        #self.consumeToken(self.current_token.type)   
+        print(f"else conditional: {self.current_token.type}")
+        
+          
+       
         if self.current_token and self.current_token.type=='KEYWORD':
-            
+            if self.current_token.value == 'elf': #check to see if there is an elf if so go back to the routine                
+                return self.parseElfCondition()
             if self.current_token.value=='el':#TODO add logic as well for the elf value
+                
+                operator = self.current_token.value
                 self.consumeToken(self.current_token.type)
-                node = self.parseElseBlockExpression() #this should handle any logic for conditional blocks, for specifically { expression }
-                print(f'else node: {node}')
+                node = ('Conditional', operator ,None, self.parseElseBlockExpression()) #this should handle any logic for conditional blocks, for specifically { expression }
+                
+                #print(f'Type: {self.current_token.type}')
+                self.consumeToken(self.current_token.type)      
+                #print(f'Type: {self.current_token.type}') 
+                #self.consumeToken(self.current_token.type)  
+                #print(f'Type: {self.current_token.type}')
                 return node
         return None
     
     #this is exclusive for comparing for conditionals, not assigning
     def parseEqualsExpression(self):
         node = self.parseTerm()
-        
-
         while self.current_token and self.current_token.type in ('EQUALS'):
 
             operator = self.current_token
@@ -144,7 +205,7 @@ class Parser:
    
     
     def parseAssignmentExpression(self):
-        
+        self.parseLineComments()
         node = self.parseTerm()
         
 
@@ -158,10 +219,10 @@ class Parser:
     
     def parseElseBlockExpression(self):
         #I want to identify "{" so then I can consume the token, and start the expression correctly
+        self.parseLineComments()
+        print(f'Entered ElseBlockExpression')
         
-
         
-        #print(f'{self.current_token.type}')
         if self.current_token and self.current_token.type in ('BLOCKSTART'):
                 self.consumeToken(self.current_token.type) #consume and move to the next token in the list, so then we can evalutate the expression correctly
         else:
@@ -174,7 +235,7 @@ class Parser:
 
     def parseIfBlockExpression(self):
         #I want to identify "{" so then I can consume the token, and start the expression correctly
-        
+        self.parseLineComments()
 
         if self.current_token and self.current_token.type in ('RPAREN'):
                 self.consumeToken(self.current_token.type) #consume and move to the next token in the list, so then we can evalutate the expression correctly
@@ -191,11 +252,43 @@ class Parser:
         
 
         return node
+    
+    def parseElfBlockExpression(self):
+        #I want to identify "{" so then I can consume the token, and start the expression correctly
+        self.parseLineComments()
+
+        if self.current_token and self.current_token.type in ('RPAREN'):
+                self.consumeToken(self.current_token.type) #consume and move to the next token in the list, so then we can evalutate the expression correctly
+        else:
+            raise SyntaxError(f"Syntax Issue on line {self.current_token.line}") #simple syntax error
+        
+        #print(f'{self.current_token.type}')
+        if self.current_token and self.current_token.type in ('BLOCKSTART'):
+                self.consumeToken(self.current_token.type) #consume and move to the next token in the list, so then we can evalutate the expression correctly
+        else:
+            raise SyntaxError(f"Syntax Issue on line {self.current_token.line}") #simple syntax error
+            
+        node = self.parseExpression()
+        
+
+        return node
+    
+
+    def parseLineComments(self):
+        current_line_number = self.current_token.line
+        if self.current_token and self.current_token.type == 'COMMENT':
+            while self.current_token.line == current_line_number:           
+                
+                self.consumeToken(self.current_token.type) #go through the token list until the next line, then we can start to look for syntax again
+
+        return
+
 
     #looking for any + or - operators, to set as the root of the tree
     def parseExpression(self):
         #initialize by looking for the potential left child node, which would could be a Term or Factor, needs to look at 
         #parseTerm() first becuase of the syntax heirarchy
+        self.parseLineComments()
         
         if self.current_token.type=='KEYWORD':
             node = self.parseIfCondition()
@@ -237,6 +330,7 @@ class Parser:
     #very similar to the parseExpression, but now we are looking at and comparing for the next node as a Factor rather than a Term
     def parseTerm(self):
         #look for the Factor as the node
+        self.parseLineComments()
         node = self.parseFactor()
 
         #check for a different operator, in this case for any multiplication or division. if nothing is found, then only return the factor valule as a node
@@ -250,8 +344,7 @@ class Parser:
 
     
     def parseFactor(self):
-        
-
+        self.parseLineComments()
        # print(f'factor {self.current_token.type}')
         if self.current_token and self.current_token.type == "INTEGER_LITERAL":
             token = ("Number", self.current_token.value)#we store the type and the value as a token and then proceed to the next token

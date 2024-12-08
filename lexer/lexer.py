@@ -11,7 +11,8 @@ TOKENS = [
     ('BOOLEAN',    r'\b(T|F)\b'),          # Boolean literals
     ('STRING',     r'\".*?\"|\'.*?\''),    # String literals (single or double quotes)
     ('EQUALS',     r'=='),                  # Assignment operator
-    ('ASSIGN',     r'='),                  # Assignment operator   
+    ('ASSIGN',     r'='),                  # Assignment operator
+    ('COMMENT',    r'\/\*'),                  # Statement terminator
     ('END',        r';'),                  # Statement terminator
     ('ID',         r'[A-Za-z_]\w*'),       # Identifiers (variables/functions)
     #('OP',        r'[+\-*/%]'),           # Arithmetic operators
@@ -73,6 +74,8 @@ def tokenizeCode(code):
                 token_list.append(Token('KEYWORD', value, line, column))
             elif type == 'ID':
                 token_list.append(Token('IDENTIFIER', value, line, column))
+            elif type == 'COMMENT':
+                token_list.append(Token('COMMENT', value, line, column))
             elif type == 'ASSIGN':
                 token_list.append(Token('ASSIGN', value, line, column))
             elif type == 'EQUALS':#comparator operator for conditionals
