@@ -8,29 +8,22 @@ import sys
 code = '''
             
                 /*this is my langauge I am engineering
-                x=2;
-                y=22;
-                z=3;
-                if(x==2){
-                    display("first");
+                	first='gavin';
+                    last='barrett';
+                    full_name=first+' '+last;
+                    x=1;
+                    y=21;
+                    z=3;
+
+                    if(z==2)
+                    {
+                        display(full_name);
+                    }
+
+                    z=4;
+
                     
-                }
-                elf(x==0){
-                    display("second");
-                }
-                elf(x==4){
-                    display("third");
-                }el{
-                    display("fourth");
-                }
-                
-                first="gavin";
-                display(first);
-
-                last="barrett";
-                display(last);
-
-                display("FirstName: "+first+" LastName: "+last);
+                 
 
 
 
@@ -74,15 +67,15 @@ code = '''
 
 #main()
 tokens = tokenizeCode(code)
-#for token in tokens:
-    #print(token)
+for token in tokens:
+    print(token)
 
 #print(type(tokens))
 token_list = iter(tokens) #make the token_list an iterator so then I can use the next function within the Parser object
 #print(type(tokens))
 p = Parser(token_list)
 result = p.parseStatements()
-#print(result)
+print(result)
 separated_statement_node = result[1] #I want to get the value of the statements tuple, the tuple contains the statement AST tree essentially
 print (separated_statement_node)
 eval = Evaluator()

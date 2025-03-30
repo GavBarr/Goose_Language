@@ -10,7 +10,7 @@ class Evaluator:
     
     #this is the main function, that will recursively be called
     def evaluate(self,node):
-        try:
+        #try:
             if isinstance(node, list):
                 results = []  # Create a list to hold the results
                 for n in node:
@@ -39,8 +39,8 @@ class Evaluator:
                         print(f'Function {def_name} not found.')
                 else:
                     return results
-        except:
-            raise SyntaxError(f'Language Error')
+        #except:
+            #raise SyntaxError(f'Language Error')
             
 
         
@@ -142,6 +142,8 @@ class Evaluator:
             left = self.evaluate(node[2]) #this will be the expression to determine if it is true or false            
             if left == True:
                 self.conditional_result=True
+                #if node[3] != None:
+                print(f'Right Node Issue: {node[3]}')
                 right = self.evaluate(node[3]) #this is the block of code that will be executed if the statement is true
                 
             else:
